@@ -10,10 +10,14 @@ const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 interface DetailedMovie {
   id: number;
   title: string;
+  tagline?: string;
   overview: string;
   poster_path: string | null;
+  backdrop_path: string | null;
   vote_average: number;
+  vote_count: number;
   release_date: string;
+  runtime?: number;
   genres: { id: number; name: string }[];
 }
 
@@ -49,55 +53,107 @@ export const MovieDetail = () => {
     }
   }, [id]);
 
-  if (loading) return <div className="container"><p className="status-text">Laddar detaljer...</p></div>;
-  if (error || !movie) return <div className="container"><p className="error-text">{error || "Filmen hittades inte."}</p></div>;
+  if (loading) {
+    return (
+      <main className="container">
+        <p className="status-text">Laddar detaljer...</p>
+      </main>
+    );
+  }
+
+  if (error || !movie) {
+    return (
+      <main className="container">
+        <div className="empty-state">
+          <h3>Hoppsan!</h3>
+          <p>{error || "Filmen kunde inte hittas."}</p>
+          <Link to="/" className="empty-cta-btn">
+            ← Tillbaka till start
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const saved = isInWatchlist(movie.id);
+  const poster = movie.poster_path
+    ? `${IMAGE_BASE_URL}${movie.poster_path}`
+    : "https://via.placeholder.com/340x510?text=Ingen+bild";
+
+  const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "Okänt år";
+  const hours = movie.runtime ? Math.floor(movie.runtime / 60) : 0;
+  const minutes = movie.runtime ? movie.runtime % 60 : 0;
+  const runtimeFormatted = movie.runtime ? `${hours}h ${minutes}m` : null;
 
   return (
     <main className="container movie-detail-page">
-      <Link to="/" className="back-link">← Tillbaka till filmer</Link>
-      <div className="detail-layout">
-        <img
-          src={
-            movie.poster_path
-              ? `${IMAGE_BASE_URL}${movie.poster_path}`
-              : "https://via.placeholder.com/300x450"
-          }
-          alt={movie.title}
-        />
-        <div className="detail-content">
-          <h2>{movie.title}</h2>
-          <p className="detail-meta">
-            ★ {movie.vote_average.toFixed(1)} | {movie.release_date?.slice(0, 4)}
-          </p>
-          <div className="genre-tags">
-            {movie.genres.map((g) => (
-              <span key={g.id} className="genre-tag">
-                {g.name}
-              </span>
-            ))}
+      <Link to="/" className="detail-back-btn">
+        <span className="back-arrow">←</span> Tillbaka till filmer
+      </Link>
+
+      <section className="detail-card">
+        <div className="detail-poster-wrap">
+          <img src={poster} alt={movie.title} />
+          <div className="detail-poster-rating">
+            ★ {movie.vote_average.toFixed(1)}
           </div>
-          <p className="detail-overview">
-            {movie.overview || "Ingen svensk sammanfattning tillgänglig."}
-          </p>
-          <button
-            className={saved ? "btn-saved" : "btn-save"}
-            onClick={() =>
-              saved
-                ? removeFromWatchlist(movie.id)
-                : addToWatchlist({
-                    id: movie.id,
-                    title: movie.title,
-                    poster_path: movie.poster_path,
-                    vote_average: movie.vote_average,
-                  })
-            }
-          >
-            {saved ? "Ta bort från lista" : "🔖 Lägg till i lista"}
-          </button>
         </div>
-      </div>
+
+        <div className="detail-info">
+          <div className="detail-header-block">
+            <h1 className="detail-title">{movie.title}</h1>
+            {movie.tagline && <p className="detail-tagline">"{movie.tagline}"</p>}
+
+            <div className="detail-meta-row">
+              <span className="meta-pill year-pill">{releaseYear}</span>
+              {runtimeFormatted && (
+                <span className="meta-pill">{runtimeFormatted}</span>
+              )}
+              <span className="meta-pill rating-pill">
+                ★ {movie.vote_average.toFixed(1)} / 10
+              </span>
+            </div>
+          </div>
+
+          {movie.genres && movie.genres.length > 0 && (
+            <div className="genre-pill-list">
+              {movie.genres.map((g) => (
+                <span key={g.id} className="genre-pill">
+                  {g.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="detail-overview-block">
+            <h3>Handling</h3>
+            <p className="detail-overview">
+              {movie.overview
+                ? movie.overview
+                : "Ingen svensk sammanfattning tillgänglig för denna film."}
+            </p>
+          </div>
+
+          <div className="detail-actions">
+            <button
+              type="button"
+              className={saved ? "btn-detail-saved" : "btn-detail-save"}
+              onClick={() =>
+                saved
+                  ? removeFromWatchlist(movie.id)
+                  : addToWatchlist({
+                      id: movie.id,
+                      title: movie.title,
+                      poster_path: movie.poster_path,
+                      vote_average: movie.vote_average,
+                    })
+              }
+            >
+              {saved ? "✕ Ta bort från min lista" : "+ Lägg till i min lista"}
+            </button>
+          </div>
+        </div>
+      </section>
     </main>
   );
 };
