@@ -18,13 +18,16 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
 
   return (
     <div className="movie-card">
-      <div className="badge-rating">★ {movie.vote_average.toFixed(1)}</div>
-      <Link to={`/movie/${movie.id}`}>
-        <img src={poster} alt={movie.title} />
+      <Link to={`/movie/${movie.id}`} className="card-image-wrap">
+        <span className="badge-rating">★ {movie.vote_average.toFixed(1)}</span>
+        <img src={poster} alt={movie.title} loading="lazy" />
       </Link>
       <div className="card-info">
-        <h3>{movie.title}</h3>
+        <Link to={`/movie/${movie.id}`} className="card-title">
+          {movie.title}
+        </Link>
         <button
+          type="button"
           className={saved ? "btn-saved" : "btn-save"}
           onClick={() => (saved ? removeFromWatchlist(movie.id) : addToWatchlist(movie))}
         >

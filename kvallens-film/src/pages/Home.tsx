@@ -12,11 +12,13 @@ export const Home = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   const fetchPopularMovies = async () => {
     try {
       setLoading(true);
       setError("");
+      setIsSearching(false);
       const response = await axios.get(`${BASE_URL}/movie/popular`, {
         params: {
           api_key: API_KEY,
@@ -36,6 +38,7 @@ export const Home = () => {
     try {
       setLoading(true);
       setError("");
+      setIsSearching(true);
       const response = await axios.get(`${BASE_URL}/search/movie`, {
         params: {
           api_key: API_KEY,
@@ -67,11 +70,16 @@ export const Home = () => {
       {error && <p className="error-text">{error}</p>}
 
       {!loading && !error && (
-        <section className="movies-grid">
-          {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
-          ))}
-        </section>
+        <>
+          <h2 className="section-title">
+            {isSearching ? "Sökresultat" : "Populära filmer"}
+          </h2>
+          <section className="movies-grid">
+            {movies.map((movie) => (
+              <MovieCard key={movie.id} movie={movie} />
+            ))}
+          </section>
+        </>
       )}
     </main>
   );
