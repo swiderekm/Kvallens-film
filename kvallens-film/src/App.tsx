@@ -1,15 +1,30 @@
-import { useState } from 'react'
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SiteProvider } from "./context/SiteContext";
+import { Navbar } from "./components/Navbar";
+import { Footer } from "./components/Footer";
+import { Home } from "./pages/Home";
+import { MovieDetail } from "./pages/MovieDetail";
+import { About } from "./pages/About";
+import { WatchList } from "./pages/WatchList";
+import "./App.css";
 
 function App() {
-
   return (
-    <div className="App">
-      <header className="App-header">
-
-      </header>
-    </div>
-  )
+    <SiteProvider>
+      <BrowserRouter>
+        <div className="app-wrapper">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
+            <Route path="/watchlist" element={<WatchList />} />
+            <Route path="/about" element={<About />} />
+          </Routes>
+          <Footer />
+        </div>
+      </BrowserRouter>
+    </SiteProvider>
+  );
 }
 
-export default App
+export default App;
