@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useSiteContext } from "../context/SiteContext";
 
 export const Navbar = () => {
-  const { watchlist } = useSiteContext();
+  const { watchlist, watchedList } = useSiteContext();
   const location = useLocation();
 
   return (
@@ -26,6 +26,15 @@ export const Navbar = () => {
             Min lista
             {watchlist.length > 0 && (
               <span className="pill-badge">{watchlist.length}</span>
+            )}
+          </Link>
+          <Link
+            to="/watched"
+            className={`nav-pill ${location.pathname === "/watched" ? "nav-pill-active" : ""}`}
+          >
+            Sedd
+            {watchedList.length > 0 && (
+              <span className="pill-badge badge-green">{watchedList.length}</span>
             )}
           </Link>
           <Link
