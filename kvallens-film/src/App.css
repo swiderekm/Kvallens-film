@@ -1,3 +1,8 @@
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -16,6 +21,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
 
 .container {
@@ -26,92 +32,160 @@ body {
   flex: 1;
 }
 
-/* navbar */
-.navbar {
+/* --- NOWOCZESNY NAVBAR (GLASSMORPHISM & ZERO LAYOUT SHIFT) --- */
+.navbar-wrapper {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(12, 14, 23, 0.85);
-  backdrop-filter: blur(16px);
+  z-index: 100;
+  height: 72px; /* Stała, niezmienna wysokość */
+  width: 100%;
+  flex-shrink: 0;
+  background: rgba(12, 14, 23, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
 
-.navbar-inner {
+.navbar-container {
   max-width: 1200px;
+  height: 100%;
   margin: 0 auto;
-  padding: 14px 20px;
+  padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.nav-logo {
+/* Logo */
+.navbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
-  color: #ffffff;
+  transition: transform 0.2s ease;
 }
 
-.logo-icon {
-  font-size: 1.4rem;
+.navbar-brand:hover {
+  transform: translateY(-1px);
 }
 
-.logo-text {
-  font-size: 1.25rem;
+.brand-icon-box {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(250, 204, 21, 0.05));
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.15);
+}
+
+.brand-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  line-height: 1.1;
 }
 
-.nav-links {
+.brand-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #facc15;
+}
+
+/* Menu nawigacji w stylu pigułek */
+.navbar-menu {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.nav-pill {
+.nav-item {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #94a3b8;
-  text-decoration: none;
   padding: 8px 16px;
   border-radius: 9999px;
-  font-size: 0.9rem;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.88rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-  background: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-.nav-pill:hover {
+.nav-item:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.06);
 }
 
-.nav-pill-active {
-  background: rgba(250, 204, 21, 0.12) !important;
-  color: #facc15 !important;
+.nav-item-active {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   font-weight: 600;
-  border: 1px solid rgba(250, 204, 21, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.pill-badge {
-  background: #facc15;
-  color: #0c0e17;
-  font-size: 0.75rem;
-  font-weight: 700;
+/* Badges w Navbarze */
+.nav-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
   padding: 2px 7px;
   border-radius: 999px;
   line-height: 1;
 }
 
-.badge-green {
-  background: #22c55e !important;
-  color: #ffffff !important;
+.nav-badge-gold {
+  background: #facc15;
+  color: #0c0e17;
+  box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
 }
+
+.nav-badge-green {
+  background: #22c55e;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+/* Responsywność dla Navbaru */
+@media (max-width: 640px) {
+  .navbar-wrapper {
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .navbar-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .navbar-menu {
+    width: 100%;
+    justify-content: center;
+    overflow-x: auto;
+  }
+
+  .nav-item {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
+
 
 /* Hero */
 .page-header {
