@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSiteContext } from "../context/SiteContext";
 
@@ -13,9 +13,7 @@ interface DetailedMovie {
   tagline?: string;
   overview: string;
   poster_path: string | null;
-  backdrop_path: string | null;
   vote_average: number;
-  vote_count: number;
   release_date: string;
   runtime?: number;
   genres: { id: number; name: string }[];
@@ -23,6 +21,7 @@ interface DetailedMovie {
 
 export const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState<DetailedMovie | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,15 +66,16 @@ export const MovieDetail = () => {
         <div className="empty-state">
           <h3>Hoppsan!</h3>
           <p>{error || "Filmen kunde inte hittas."}</p>
-          <Link to="/" className="empty-cta-btn">
-            ← Tillbaka till start
-          </Link>
+          <button type="button" onClick={() => navigate(-1)} className="empty-cta-btn">
+            ← Tillbaka
+          </button>
         </div>
       </main>
     );
   }
 
-  const saved = isInWatchlist(movie.id);
+  const inWatchlist = isInWatchlist(movie.id);
+
   const poster = movie.poster_path
     ? `${IMAGE_BASE_URL}${movie.poster_path}`
     : "https://via.placeholder.com/340x510?text=Ingen+bild";
@@ -85,11 +85,23 @@ export const MovieDetail = () => {
   const minutes = movie.runtime ? movie.runtime % 60 : 0;
   const runtimeFormatted = movie.runtime ? `${hours}h ${minutes}m` : null;
 
+  const moviePayload = {
+    id: movie.id,
+    title: movie.title,
+    poster_path: movie.poster_path,
+    vote_average: movie.vote_average,
+  };
+
   return (
     <main className="container movie-detail-page">
-      <Link to="/" className="detail-back-btn">
-        <span className="back-arrow">←</span> Tillbaka till filmer
-      </Link>
+      {/* navigate(-1) zwraca dokładnie na stronę, z której przyszedł użytkownik */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="detail-back-btn"
+      >
+        <span className="back-arrow">←</span> Tillbaka
+      </button>
 
       <section className="detail-card">
         <div className="detail-poster-wrap">
@@ -134,22 +146,18 @@ export const MovieDetail = () => {
             </p>
           </div>
 
-          <div className="detail-actions">
+          <div className="detail-actions-group">
+            {/* Przycisk listy "Chcę obejrzeć" */}
             <button
               type="button"
-              className={saved ? "btn-detail-saved" : "btn-detail-save"}
+              className={inWatchlist ? "btn-detail-saved" : "btn-detail-save"}
               onClick={() =>
-                saved
+                inWatchlist
                   ? removeFromWatchlist(movie.id)
-                  : addToWatchlist({
-                      id: movie.id,
-                      title: movie.title,
-                      poster_path: movie.poster_path,
-                      vote_average: movie.vote_average,
-                    })
+                  : addToWatchlist(moviePayload)
               }
             >
-              {saved ? "✕ Ta bort från min lista" : "+ Lägg till i min lista"}
+              {inWatchlist ? "✕ Ta bort från min lista" : "+ Lägg till i min lista"}
             </button>
           </div>
         </div>
