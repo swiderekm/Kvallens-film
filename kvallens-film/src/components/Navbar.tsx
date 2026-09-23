@@ -5,46 +5,62 @@ export const Navbar = () => {
   const { watchlist, watchedList } = useSiteContext();
   const location = useLocation();
 
+  const navItems = [
+    { path: "/", label: "Alla filmer" },
+    {
+      path: "/watchlist",
+      label: "Min lista",
+      count: watchlist.length,
+      badgeColor: "gold",
+    },
+    {
+      path: "/watched",
+      label: "Sedd",
+      count: watchedList.length,
+      badgeColor: "green",
+    },
+    { path: "/about", label: "Om oss" },
+  ];
+
   return (
-    <nav className="navbar">
-      <div className="navbar-inner">
-        <Link to="/" className="nav-logo">
-          <span className="logo-icon">🎬</span>
-          <span className="logo-text">Kvällens film</span>
+    <header className="navbar-wrapper">
+      <nav className="navbar-container">
+        {/* Logo z efektem poświaty */}
+        <Link to="/" className="navbar-brand">
+          <div className="brand-icon-box">
+            <span>🎬</span>
+          </div>
+          <div className="brand-text-group">
+            <span className="brand-title">Kvällens Film</span>
+            <span className="brand-tag">Premium Guide</span>
+          </div>
         </Link>
-        <div className="nav-links">
-          <Link
-            to="/"
-            className={`nav-pill ${location.pathname === "/" ? "nav-pill-active" : ""}`}
-          >
-            Alla filmer
-          </Link>
-          <Link
-            to="/watchlist"
-            className={`nav-pill ${location.pathname === "/watchlist" ? "nav-pill-active" : ""}`}
-          >
-            Min lista
-            {watchlist.length > 0 && (
-              <span className="pill-badge">{watchlist.length}</span>
-            )}
-          </Link>
-          <Link
-            to="/watched"
-            className={`nav-pill ${location.pathname === "/watched" ? "nav-pill-active" : ""}`}
-          >
-            Sedd
-            {watchedList.length > 0 && (
-              <span className="pill-badge badge-green">{watchedList.length}</span>
-            )}
-          </Link>
-          <Link
-            to="/about"
-            className={`nav-pill ${location.pathname === "/about" ? "nav-pill-active" : ""}`}
-          >
-            Om oss
-          </Link>
+
+        {/* Pływające linki nawigacji */}
+        <div className="navbar-menu">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${isActive ? "nav-item-active" : ""}`}
+              >
+                <span>{item.label}</span>
+                {typeof item.count === "number" && item.count > 0 && (
+                  <span
+                    className={`nav-badge ${
+                      item.badgeColor === "green" ? "nav-badge-green" : "nav-badge-gold"
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 };
