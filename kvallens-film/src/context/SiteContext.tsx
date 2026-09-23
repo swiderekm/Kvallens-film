@@ -12,9 +12,13 @@ export interface Movie {
 
 interface SiteContextType {
   watchlist: Movie[];
+  watchedList: Movie[];
   addToWatchlist: (movie: Movie) => void;
   removeFromWatchlist: (id: number) => void;
   isInWatchlist: (id: number) => boolean;
+  markAsWatched: (movie: Movie) => void;
+  unmarkAsWatched: (id: number) => void;
+  isWatched: (id: number) => boolean;
 }
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -25,9 +29,18 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [watchedList, setWatchedList] = useState<Movie[]>(() => {
+    const saved = localStorage.getItem("kvallens_watched");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => {
     localStorage.setItem("kvallens_watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
+
+  useEffect(() => {
+    localStorage.setItem("kvallens_watched", JSON.stringify(watchedList));
+  }, [watchedList]);
 
   const addToWatchlist = (movie: Movie) => {
     if (!watchlist.some((m) => m.id === movie.id)) {
@@ -43,9 +56,34 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
     return watchlist.some((m) => m.id === id);
   };
 
+  const markAsWatched = (movie: Movie) => {
+    setWatchlist((prev) => prev.filter((m) => m.id !== movie.id));
+
+    if (!watchedList.some((m) => m.id === movie.id)) {
+      setWatchedList((prev) => [...prev, movie]);
+    }
+  };
+
+  const unmarkAsWatched = (id: number) => {
+    setWatchedList((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const isWatched = (id: number) => {
+    return watchedList.some((m) => m.id === id);
+  };
+
   return (
     <SiteContext.Provider
-      value={{ watchlist, addToWatchlist, removeFromWatchlist, isInWatchlist }}
+      value={{
+        watchlist,
+        watchedList,
+        addToWatchlist,
+        removeFromWatchlist,
+        isInWatchlist,
+        markAsWatched,
+        unmarkAsWatched,
+        isWatched,
+      }}
     >
       {children}
     </SiteContext.Provider>

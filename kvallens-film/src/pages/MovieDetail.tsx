@@ -26,7 +26,14 @@ export const MovieDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useSiteContext();
+  const {
+    isInWatchlist,
+    addToWatchlist,
+    removeFromWatchlist,
+    isWatched,
+    markAsWatched,
+    unmarkAsWatched,
+  } = useSiteContext();
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -75,6 +82,7 @@ export const MovieDetail = () => {
   }
 
   const inWatchlist = isInWatchlist(movie.id);
+  const watched = isWatched(movie.id);
 
   const poster = movie.poster_path
     ? `${IMAGE_BASE_URL}${movie.poster_path}`
@@ -94,7 +102,6 @@ export const MovieDetail = () => {
 
   return (
     <main className="container movie-detail-page">
-      {/* navigate(-1) zwraca dokładnie na stronę, z której przyszedł użytkownik */}
       <button
         type="button"
         onClick={() => navigate(-1)}
@@ -109,6 +116,7 @@ export const MovieDetail = () => {
           <div className="detail-poster-rating">
             ★ {movie.vote_average.toFixed(1)}
           </div>
+          {watched && <div className="detail-badge-watched">✓ Sedd</div>}
         </div>
 
         <div className="detail-info">
@@ -124,6 +132,9 @@ export const MovieDetail = () => {
               <span className="meta-pill rating-pill">
                 ★ {movie.vote_average.toFixed(1)} / 10
               </span>
+              {watched && (
+                <span className="meta-pill watched-pill">✓ Har sett denna</span>
+              )}
             </div>
           </div>
 
@@ -147,7 +158,6 @@ export const MovieDetail = () => {
           </div>
 
           <div className="detail-actions-group">
-            {/* Przycisk listy "Chcę obejrzeć" */}
             <button
               type="button"
               className={inWatchlist ? "btn-detail-saved" : "btn-detail-save"}
@@ -158,6 +168,18 @@ export const MovieDetail = () => {
               }
             >
               {inWatchlist ? "✕ Ta bort från min lista" : "+ Lägg till i min lista"}
+            </button>
+
+            <button
+              type="button"
+              className={watched ? "btn-detail-watched-active" : "btn-detail-watched"}
+              onClick={() =>
+                watched
+                  ? unmarkAsWatched(movie.id)
+                  : markAsWatched(moviePayload)
+              }
+            >
+              {watched ? "✓ Obejrzano (Klicka för att ångra)" : "👁 Markera som sedd"}
             </button>
           </div>
         </div>
