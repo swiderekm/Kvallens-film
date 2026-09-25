@@ -25,7 +25,6 @@ export const Navbar = () => {
   return (
     <header className="navbar-wrapper">
       <nav className="navbar-container">
-        {/* Logo z efektem poświaty */}
         <Link to="/" className="navbar-brand">
           <div className="brand-icon-box">
             <span>🎬</span>
@@ -36,7 +35,6 @@ export const Navbar = () => {
           </div>
         </Link>
 
-        {/* Pływające linki nawigacji */}
         <div className="navbar-menu">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
