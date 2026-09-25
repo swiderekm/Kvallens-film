@@ -94,7 +94,7 @@ export const MovieDetail = () => {
 
   if (loading) {
     return (
-      <main className="container">
+      <main className="container movie-detail-page">
         <p className="status-text">Laddar detaljer...</p>
       </main>
     );
@@ -102,15 +102,15 @@ export const MovieDetail = () => {
 
   if (error || !movie) {
     return (
-      <main className="container">
-        <p className="error-text">{error || "Filmen hittades inte."}</p>
+      <main className="container movie-detail-page">
         <button
           type="button"
-          className="btn-back"
+          className="detail-back-btn"
           onClick={() => navigate(-1)}
         >
           ← Tillbaka
         </button>
+        <p className="error-text">{error || "Filmen hittades inte."}</p>
       </main>
     );
   }
@@ -149,50 +149,48 @@ export const MovieDetail = () => {
   };
 
   return (
-    <main className="container">
-      <div className="detail-top-nav">
-        <button
-          type="button"
-          className="btn-back"
-          onClick={() => navigate(-1)}
-        >
-          ← Tillbaka
-        </button>
-      </div>
+    <main className="container movie-detail-page">
+      <button
+        type="button"
+        className="detail-back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Tillbaka
+      </button>
 
       <article className="detail-card">
         <div className="detail-poster-wrap">
+          {watched && <span className="detail-badge-watched">✓ Sedd</span>}
+          {movie.vote_average ? (
+            <span className="detail-poster-rating">
+              ★ {movie.vote_average.toFixed(1)}
+            </span>
+          ) : null}
           {movie.poster_path ? (
             <img
               src={`${IMAGE_BASE_URL}${movie.poster_path}`}
               alt={movie.title}
-              className="detail-poster-img"
             />
           ) : (
             <div className="no-poster-box">Ingen bild</div>
           )}
         </div>
 
-        <div className="detail-info-pane">
-          <header className="detail-header-block">
-            <h1 className="detail-title">{movie.title}</h1>
-            {movie.tagline && <p className="detail-tagline">"{movie.tagline}"</p>}
-          </header>
+        <div className="detail-info">
+          <h1 className="detail-title">{movie.title}</h1>
+          {movie.tagline && <p className="detail-tagline">"{movie.tagline}"</p>}
 
           <div className="detail-meta-row">
-            <span className="detail-rating-pill">
+            <span className="meta-pill rating-pill">
               ★ {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
             </span>
-            <span className="detail-meta-dot">•</span>
-            <span className="detail-release-date">
+            <span className="meta-pill">
               {movie.release_date ? movie.release_date.substring(0, 4) : "Okänt år"}
             </span>
             {movie.runtime ? (
-              <>
-                <span className="detail-meta-dot">•</span>
-                <span className="detail-runtime-pill">{movie.runtime} min</span>
-              </>
+              <span className="meta-pill">{movie.runtime} min</span>
             ) : null}
+            {watched && <span className="meta-pill watched-pill">✓ Sedd</span>}
           </div>
 
           {movie.genres && movie.genres.length > 0 && (
@@ -207,7 +205,7 @@ export const MovieDetail = () => {
 
           <div className="detail-overview-block">
             <h3>Handling</h3>
-            <p className="detail-overview-text">
+            <p className="detail-overview">
               {movie.overview || "Ingen svensk beskrivning tillgänglig för denna film."}
             </p>
           </div>
@@ -243,7 +241,10 @@ export const MovieDetail = () => {
       </article>
 
       {showModal && trailerKey && (
-        <div className="trailer-modal-backdrop" onClick={() => setShowModal(false)}>
+        <div
+          className="trailer-modal-backdrop"
+          onClick={() => setShowModal(false)}
+        >
           <div
             className="trailer-modal-content"
             onClick={(e) => e.stopPropagation()}
