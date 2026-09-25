@@ -10,9 +10,26 @@ export interface Movie {
   overview?: string;
 }
 
+export interface FilterState {
+  genre: string;
+  year: string;
+  sortBy: string;
+  minRating: string;
+}
+
+export const DEFAULT_FILTERS: FilterState = {
+  genre: "",
+  year: "",
+  sortBy: "popularity.desc",
+  minRating: "",
+};
+
 interface SiteContextType {
   watchlist: Movie[];
   watchedList: Movie[];
+  filters: FilterState;
+  setFilters: (filters: FilterState) => void;
+  resetFilters: () => void;
   addToWatchlist: (movie: Movie) => void;
   removeFromWatchlist: (id: number) => void;
   isInWatchlist: (id: number) => boolean;
@@ -34,6 +51,12 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Persystencja filtrów podczas przechodzenia między podstronami
+  const [filters, setFiltersState] = useState<FilterState>(() => {
+    const savedFilters = sessionStorage.getItem("kvallens_filters");
+    return savedFilters ? JSON.parse(savedFilters) : DEFAULT_FILTERS;
+  });
+
   useEffect(() => {
     localStorage.setItem("kvallens_watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
@@ -41,6 +64,19 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem("kvallens_watched", JSON.stringify(watchedList));
   }, [watchedList]);
+
+  useEffect(() => {
+    sessionStorage.setItem("kvallens_filters", JSON.stringify(filters));
+  }, [filters]);
+
+  const setFilters = (newFilters: FilterState) => {
+    setFiltersState(newFilters);
+  };
+
+  const resetFilters = () => {
+    setFiltersState(DEFAULT_FILTERS);
+    sessionStorage.removeItem("kvallens_filters");
+  };
 
   const addToWatchlist = (movie: Movie) => {
     if (!watchlist.some((m) => m.id === movie.id)) {
@@ -58,7 +94,6 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
 
   const markAsWatched = (movie: Movie) => {
     setWatchlist((prev) => prev.filter((m) => m.id !== movie.id));
-
     if (!watchedList.some((m) => m.id === movie.id)) {
       setWatchedList((prev) => [...prev, movie]);
     }
@@ -77,6 +112,9 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
       value={{
         watchlist,
         watchedList,
+        filters,
+        setFilters,
+        resetFilters,
         addToWatchlist,
         removeFromWatchlist,
         isInWatchlist,

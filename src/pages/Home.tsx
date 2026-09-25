@@ -1,16 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useSiteContext, DEFAULT_FILTERS } from "../context/SiteContext";
 import type { Movie } from "../context/SiteContext";
+import type { FilterState } from "../context/SiteContext";
 import { MovieCard } from "../components/MovieCard";
 import { SearchForm } from "../components/SearchForm";
 import { Header } from "../components/Header";
+import { FilterBar } from "../components/FilterBar";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
-const INITIAL_LIMIT = 12; // Początkowo 12 filmów (3 rzędy po 4)
-const STEP = 8;           // Każde kliknięcie ładuje kolejne 8 filmów
+const INITIAL_LIMIT = 12;
+const STEP = 8;
 
 export const Home = () => {
+  const { filters, setFilters, resetFilters } = useSiteContext();
+
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -21,8 +26,8 @@ export const Home = () => {
   const [hasMoreApiPages, setHasMoreApiPages] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_LIMIT);
 
-  // Pobieranie początkowych popularnych filmów
-  const fetchPopularMovies = async () => {
+  // Pobieranie filmów na podstawie aktualnych filtrów
+  const fetchMoviesWithFilters = useCallback(async (appliedFilters: FilterState) => {
     try {
       setLoading(true);
       setError("");
@@ -31,24 +36,39 @@ export const Home = () => {
       setApiPage(1);
       setVisibleCount(INITIAL_LIMIT);
 
-      const response = await axios.get(`${BASE_URL}/movie/popular`, {
-        params: {
-          api_key: API_KEY,
-          language: "sv-SE",
-          page: 1,
-        },
-      });
+      const params: Record<string, string | number> = {
+        api_key: API_KEY,
+        language: "sv-SE",
+        page: 1,
+        sort_by: appliedFilters.sortBy,
+      };
 
+      if (appliedFilters.genre) {
+        params.with_genres = appliedFilters.genre;
+      }
+      if (appliedFilters.year) {
+        params.primary_release_year = appliedFilters.year;
+      }
+      if (appliedFilters.minRating) {
+        params["vote_average.gte"] = appliedFilters.minRating;
+        params["vote_count.gte"] = 50;
+      }
+
+      const response = await axios.get(`${BASE_URL}/discover/movie`, { params });
       setMovies(response.data.results);
       setHasMoreApiPages(response.data.page < response.data.total_pages);
+
+      if (response.data.results.length === 0) {
+        setError("Inga filmer matchade de valda filtren.");
+      }
     } catch {
-      setError("Kunde inte hämta filmer. Kontrollera din internetanslutning eller API-nyckel.");
+      setError("Kunde inte hämta filmer. Kontrollera din anslutning eller API-nyckel.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Wyszukiwanie filmów
+  // Wyszukiwanie tekstowe
   const handleSearch = async (query: string) => {
     try {
       setLoading(true);
@@ -80,36 +100,61 @@ export const Home = () => {
     }
   };
 
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    fetchMoviesWithFilters(newFilters);
+  };
+
+  const handleResetFilters = () => {
+    resetFilters();
+    fetchMoviesWithFilters(DEFAULT_FILTERS);
+  };
+
+  // Ładowanie filmów przy starcie z uwzględnieniem zapisanych filtrów
+  useEffect(() => {
+    fetchMoviesWithFilters(filters);
+  }, [fetchMoviesWithFilters, filters]);
+
   // Obsługa przycisku "Ladda fler"
   const handleLoadMore = async () => {
     const nextVisible = visibleCount + STEP;
 
-    // Jeżeli mamy już pobrane filmy w tablicy, po prostu zwiększamy widoczną liczbę
     if (nextVisible <= movies.length) {
       setVisibleCount(nextVisible);
       return;
     }
 
-    // Jeśli potrzebujemy więcej filmów i API ma kolejne strony, pobieramy następną stronę z TMDb
     if (hasMoreApiPages) {
       try {
         setLoadingMore(true);
         const nextPage = apiPage + 1;
-        const endpoint = isSearching ? "/search/movie" : "/movie/popular";
 
-        const params: Record<string, string | number> = {
-          api_key: API_KEY,
-          language: "sv-SE",
-          page: nextPage,
-        };
-
+        let response;
         if (isSearching) {
-          params.query = currentQuery;
+          response = await axios.get(`${BASE_URL}/search/movie`, {
+            params: {
+              api_key: API_KEY,
+              query: currentQuery,
+              language: "sv-SE",
+              page: nextPage,
+            },
+          });
+        } else {
+          const params: Record<string, string | number> = {
+            api_key: API_KEY,
+            language: "sv-SE",
+            page: nextPage,
+            sort_by: filters.sortBy,
+          };
+          if (filters.genre) params.with_genres = filters.genre;
+          if (filters.year) params.primary_release_year = filters.year;
+          if (filters.minRating) {
+            params["vote_average.gte"] = filters.minRating;
+            params["vote_count.gte"] = 50;
+          }
+          response = await axios.get(`${BASE_URL}/discover/movie`, { params });
         }
 
-        const response = await axios.get(`${BASE_URL}${endpoint}`, { params });
-
-        // Łączymy nowe filmy, odfiltrowując ewentualne duplikaty
         setMovies((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
           const newUnique = response.data.results.filter(
@@ -131,17 +176,27 @@ export const Home = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPopularMovies();
-  }, []);
-
   const visibleMovies = movies.slice(0, visibleCount);
   const canLoadMore = visibleCount < movies.length || hasMoreApiPages;
 
   return (
     <main className="container">
       <Header />
-      <SearchForm onSearch={handleSearch} onReset={fetchPopularMovies} />
+      <SearchForm
+        onSearch={handleSearch}
+        onReset={() => {
+          fetchMoviesWithFilters(filters);
+        }}
+      />
+
+      {!isSearching && (
+        <FilterBar
+          filters={filters}
+          onChange={handleFilterChange}
+          onReset={handleResetFilters}
+          disabled={loading}
+        />
+      )}
 
       {loading && <p className="status-text">Hämtar filmer...</p>}
       {error && <p className="error-text">{error}</p>}
@@ -150,7 +205,7 @@ export const Home = () => {
         <>
           <div className="section-header-row">
             <h2 className="section-title">
-              {isSearching ? `Sökresultat för "${currentQuery}"` : "Populära filmer"}
+              {isSearching ? `Sökresultat för "${currentQuery}"` : "Upptäck filmer"}
             </h2>
             <span className="movies-count-badge">
               Visar {visibleMovies.length} av {movies.length}
@@ -163,7 +218,6 @@ export const Home = () => {
             ))}
           </section>
 
-          {/* Przycisk Load More */}
           {canLoadMore && (
             <div className="load-more-container">
               <button
