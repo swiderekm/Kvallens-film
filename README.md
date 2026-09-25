@@ -45,6 +45,9 @@ Kvällens Film är en modern och responsiv webbapplikation byggd med React, Type
 Följ dessa steg för att köra projektet lokalt på din dator:
 
 ### 1. Klona repositoryt
-```bash
-git clone <URL_TILL_DITT_GITHUB_REPO>
-cd kvallens-film
+### 2. Öppna konsolen
+### 3. Använd kommandoÖ
+```npm install```
+### 4. Använd kommandot
+```npm run dev```
+### 5. Enter the link.
