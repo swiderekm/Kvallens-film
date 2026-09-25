@@ -7,19 +7,17 @@ export const WatchedList = () => {
 
   return (
     <main className="container">
-      <div className="watchlist-header">
-        <div>
-          <h2>Filmer jag har sett</h2>
-          <p className="watchlist-subtitle">
-            Här samlas alla filmer du redan har bockat av och sett
-          </p>
-        </div>
+      <header className="page-header">
+        <h1>Filmer jag har sett</h1>
+        <p>Här samlas alla filmer du redan har bockat av och sett</p>
         {watchedList.length > 0 && (
-          <span className="watchlist-count count-green">
-            {watchedList.length} {watchedList.length === 1 ? "film" : "filmer"}
-          </span>
+          <div className="header-badge-wrapper">
+            <span className="header-count-badge badge-green">
+              ✓ {watchedList.length} {watchedList.length === 1 ? "sedd film" : "sedda filmer"}
+            </span>
+          </div>
         )}
-      </div>
+      </header>
 
       {watchedList.length === 0 ? (
         <div className="empty-state">

@@ -32,12 +32,12 @@ body {
   flex: 1;
 }
 
-/* --- NOWOCZESNY NAVBAR (GLASSMORPHISM & ZERO LAYOUT SHIFT) --- */
+/* NAVBAR*/
 .navbar-wrapper {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 72px; /* Stała, niezmienna wysokość */
+  height: 72px;
   width: 100%;
   flex-shrink: 0;
   background: rgba(12, 14, 23, 0.75);
@@ -104,7 +104,6 @@ body {
   color: #facc15;
 }
 
-/* Menu nawigacji w stylu pigułek */
 .navbar-menu {
   display: flex;
   align-items: center;
@@ -141,7 +140,6 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* Badges w Navbarze */
 .nav-badge {
   font-size: 0.72rem;
   font-weight: 800;
@@ -162,7 +160,6 @@ body {
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
 }
 
-/* Responsywność dla Navbaru */
 @media (max-width: 640px) {
   .navbar-wrapper {
     height: auto;
@@ -188,6 +185,38 @@ body {
 
 
 /* Hero */
+.header-badge-wrapper {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.header-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.header-count-badge.badge-gold {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  box-shadow: 0 4px 15px rgba(250, 204, 21, 0.1);
+}
+
+.header-count-badge.badge-green {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);
+}
+
+
 .page-header {
   text-align: center;
   margin: 16px 0 28px 0;
