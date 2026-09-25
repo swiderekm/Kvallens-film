@@ -11,9 +11,6 @@ Kvällens Film är en modern och responsiv webbapplikation byggd med React, Type
 - [Teknikstack](#teknikstack)
 - [Installation och lokal körning](#installation-och-lokal-körning)
 - [Projektstruktur](#projektstruktur)
-- [Uppfyllda betygskriterier](#uppfyllda-betygskriterier)
-  - [Godkänd (G)](#godkänd-g)
-  - [Väl Godkänd (VG)](#väl-godkänd-vg)
 
 ---
 
