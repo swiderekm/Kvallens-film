@@ -17,6 +17,7 @@
   }
 }
 
+
 /* ipad */
 @media (max-width: 820px) {
   .detail-card {
@@ -54,7 +55,11 @@
     width: 100%;
     justify-content: center;
   }
+  .filter-bar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 
 /* liten ipad, stor mobil-telefon */
 @media (max-width: 768px) {
@@ -71,6 +76,7 @@
     gap: 12px;
   }
 }
+
 
 /* mobil-telefon */
 @media (max-width: 640px) {
@@ -92,6 +98,7 @@
     font-size: 0.8rem;
   }
 }
+
 
 @media (max-width: 480px) {
   .navbar-inner {
@@ -117,5 +124,21 @@
   .search-submit-btn {
     width: 100%;
     border-radius: 12px;
+  }
+  .filter-bar-wrapper {
+    padding: 16px 14px;
+  }
+  .filter-bar-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-reset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .filter-bar-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
