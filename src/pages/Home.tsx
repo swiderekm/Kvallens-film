@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useSiteContext, DEFAULT_FILTERS } from "../context/SiteContext";
-import type { Movie } from "../context/SiteContext";
-import type { FilterState } from "../context/SiteContext";
+import type { Movie, FilterState } from "../context/SiteContext";
 import { MovieCard } from "../components/MovieCard";
 import { SearchForm } from "../components/SearchForm";
 import { Header } from "../components/Header";
@@ -26,7 +25,6 @@ export const Home = () => {
   const [hasMoreApiPages, setHasMoreApiPages] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_LIMIT);
 
-  // Pobieranie filmów na podstawie aktualnych filtrów
   const fetchMoviesWithFilters = useCallback(async (appliedFilters: FilterState) => {
     try {
       setLoading(true);
@@ -55,20 +53,15 @@ export const Home = () => {
       }
 
       const response = await axios.get(`${BASE_URL}/discover/movie`, { params });
-      setMovies(response.data.results);
+      setMovies(response.data.results || []);
       setHasMoreApiPages(response.data.page < response.data.total_pages);
-
-      if (response.data.results.length === 0) {
-        setError("Inga filmer matchade de valda filtren.");
-      }
     } catch {
-      setError("Kunde inte hämta filmer. Kontrollera din anslutning eller API-nyckel.");
+      setError("Kunde inte hämta filmer. Kontrollera din internetanslutning eller API-nyckel.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Wyszukiwanie tekstowe
   const handleSearch = async (query: string) => {
     try {
       setLoading(true);
@@ -87,14 +80,10 @@ export const Home = () => {
         },
       });
 
-      setMovies(response.data.results);
+      setMovies(response.data.results || []);
       setHasMoreApiPages(response.data.page < response.data.total_pages);
-
-      if (response.data.results.length === 0) {
-        setError("Inga filmer hittades med det namnet.");
-      }
     } catch {
-      setError("Ett fel uppstod vid sökningen.");
+      setError("Ett fel uppstod vid sökningen. Kontrollera din anslutning.");
     } finally {
       setLoading(false);
     }
@@ -110,12 +99,10 @@ export const Home = () => {
     fetchMoviesWithFilters(DEFAULT_FILTERS);
   };
 
-  // Ładowanie filmów przy starcie z uwzględnieniem zapisanych filtrów
   useEffect(() => {
     fetchMoviesWithFilters(filters);
-  }, [fetchMoviesWithFilters, filters]);
+  }, []);
 
-  // Obsługa przycisku "Ladda fler"
   const handleLoadMore = async () => {
     const nextVisible = visibleCount + STEP;
 
@@ -157,7 +144,7 @@ export const Home = () => {
 
         setMovies((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
-          const newUnique = response.data.results.filter(
+          const newUnique = (response.data.results || []).filter(
             (m: Movie) => !existingIds.has(m.id)
           );
           return [...prev, ...newUnique];
@@ -201,7 +188,36 @@ export const Home = () => {
       {loading && <p className="status-text">Hämtar filmer...</p>}
       {error && <p className="error-text">{error}</p>}
 
-      {!loading && !error && (
+      {!loading && !error && movies.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">🔍</div>
+          <h3>Inga resultat hittades</h3>
+          <p>
+            {isSearching
+              ? `Vi hittade inga filmer som matchade "${currentQuery}". Prova att söka på något annat.`
+              : "Inga filmer matchade dina valda filter. Prova att ändra eller rensa filtren."}
+          </p>
+          {isSearching ? (
+            <button
+              type="button"
+              className="empty-cta-btn"
+              onClick={() => fetchMoviesWithFilters(filters)}
+            >
+              Tillbaka till alla filmer
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="empty-cta-btn"
+              onClick={handleResetFilters}
+            >
+              Rensa alla filter
+            </button>
+          )}
+        </div>
+      )}
+
+      {!loading && !error && movies.length > 0 && (
         <>
           <div className="section-header-row">
             <h2 className="section-title">

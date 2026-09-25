@@ -51,7 +51,6 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Persystencja filtrów podczas przechodzenia między podstronami
   const [filters, setFiltersState] = useState<FilterState>(() => {
     const savedFilters = sessionStorage.getItem("kvallens_filters");
     return savedFilters ? JSON.parse(savedFilters) : DEFAULT_FILTERS;
