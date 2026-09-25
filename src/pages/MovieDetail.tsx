@@ -7,6 +7,15 @@ const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
+interface VideoResult {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official: boolean;
+}
+
 interface DetailedMovie {
   id: number;
   title: string;
@@ -17,12 +26,17 @@ interface DetailedMovie {
   release_date: string;
   runtime?: number;
   genres: { id: number; name: string }[];
+  videos?: {
+    results: VideoResult[];
+  };
 }
 
 export const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [movie, setMovie] = useState<DetailedMovie | null>(null);
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,13 +54,32 @@ export const MovieDetail = () => {
       try {
         setLoading(true);
         setError("");
+
         const response = await axios.get(`${BASE_URL}/movie/${id}`, {
           params: {
             api_key: API_KEY,
             language: "sv-SE",
+            append_to_response: "videos",
+            include_video_language: "sv,en,null",
           },
         });
-        setMovie(response.data);
+
+        const data: DetailedMovie = response.data;
+        setMovie(data);
+
+        const videos = data.videos?.results || [];
+        const trailer =
+          videos.find(
+            (v) => v.site === "YouTube" && v.type === "Trailer" && v.official
+          ) ||
+          videos.find((v) => v.site === "YouTube" && v.type === "Trailer") ||
+          videos.find((v) => v.site === "YouTube" && v.type === "Teaser");
+
+        if (trailer) {
+          setTrailerKey(trailer.key);
+        } else {
+          setTrailerKey(null);
+        }
       } catch {
         setError("Kunde inte hämta information om filmen.");
       } finally {
@@ -70,13 +103,14 @@ export const MovieDetail = () => {
   if (error || !movie) {
     return (
       <main className="container">
-        <div className="empty-state">
-          <h3>Hoppsan!</h3>
-          <p>{error || "Filmen kunde inte hittas."}</p>
-          <button type="button" onClick={() => navigate(-1)} className="empty-cta-btn">
-            ← Tillbaka
-          </button>
-        </div>
+        <p className="error-text">{error || "Filmen hittades inte."}</p>
+        <button
+          type="button"
+          className="btn-back"
+          onClick={() => navigate(-1)}
+        >
+          ← Tillbaka
+        </button>
       </main>
     );
   }
@@ -84,58 +118,81 @@ export const MovieDetail = () => {
   const inWatchlist = isInWatchlist(movie.id);
   const watched = isWatched(movie.id);
 
-  const poster = movie.poster_path
-    ? `${IMAGE_BASE_URL}${movie.poster_path}`
-    : "https://via.placeholder.com/340x510?text=Ingen+bild";
+  const handleToggleWatchlist = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(movie.id);
+    } else {
+      addToWatchlist({
+        id: movie.id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+        release_date: movie.release_date,
+        overview: movie.overview,
+      });
+    }
+  };
 
-  const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "Okänt år";
-  const hours = movie.runtime ? Math.floor(movie.runtime / 60) : 0;
-  const minutes = movie.runtime ? movie.runtime % 60 : 0;
-  const runtimeFormatted = movie.runtime ? `${hours}h ${minutes}m` : null;
-
-  const moviePayload = {
-    id: movie.id,
-    title: movie.title,
-    poster_path: movie.poster_path,
-    vote_average: movie.vote_average,
+  const handleToggleWatched = () => {
+    if (watched) {
+      unmarkAsWatched(movie.id);
+    } else {
+      markAsWatched({
+        id: movie.id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+        release_date: movie.release_date,
+        overview: movie.overview,
+      });
+    }
   };
 
   return (
-    <main className="container movie-detail-page">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="detail-back-btn"
-      >
-        <span className="back-arrow">←</span> Tillbaka
-      </button>
+    <main className="container">
+      <div className="detail-top-nav">
+        <button
+          type="button"
+          className="btn-back"
+          onClick={() => navigate(-1)}
+        >
+          ← Tillbaka
+        </button>
+      </div>
 
-      <section className="detail-card">
+      <article className="detail-card">
         <div className="detail-poster-wrap">
-          <img src={poster} alt={movie.title} />
-          <div className="detail-poster-rating">
-            ★ {movie.vote_average.toFixed(1)}
-          </div>
-          {watched && <div className="detail-badge-watched">✓ Sedd</div>}
+          {movie.poster_path ? (
+            <img
+              src={`${IMAGE_BASE_URL}${movie.poster_path}`}
+              alt={movie.title}
+              className="detail-poster-img"
+            />
+          ) : (
+            <div className="no-poster-box">Ingen bild</div>
+          )}
         </div>
 
-        <div className="detail-info">
-          <div className="detail-header-block">
+        <div className="detail-info-pane">
+          <header className="detail-header-block">
             <h1 className="detail-title">{movie.title}</h1>
             {movie.tagline && <p className="detail-tagline">"{movie.tagline}"</p>}
+          </header>
 
-            <div className="detail-meta-row">
-              <span className="meta-pill year-pill">{releaseYear}</span>
-              {runtimeFormatted && (
-                <span className="meta-pill">{runtimeFormatted}</span>
-              )}
-              <span className="meta-pill rating-pill">
-                ★ {movie.vote_average.toFixed(1)} / 10
-              </span>
-              {watched && (
-                <span className="meta-pill watched-pill">✓ Har sett denna</span>
-              )}
-            </div>
+          <div className="detail-meta-row">
+            <span className="detail-rating-pill">
+              ★ {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
+            </span>
+            <span className="detail-meta-dot">•</span>
+            <span className="detail-release-date">
+              {movie.release_date ? movie.release_date.substring(0, 4) : "Okänt år"}
+            </span>
+            {movie.runtime ? (
+              <>
+                <span className="detail-meta-dot">•</span>
+                <span className="detail-runtime-pill">{movie.runtime} min</span>
+              </>
+            ) : null}
           </div>
 
           {movie.genres && movie.genres.length > 0 && (
@@ -150,40 +207,65 @@ export const MovieDetail = () => {
 
           <div className="detail-overview-block">
             <h3>Handling</h3>
-            <p className="detail-overview">
-              {movie.overview
-                ? movie.overview
-                : "Ingen svensk sammanfattning tillgänglig för denna film."}
+            <p className="detail-overview-text">
+              {movie.overview || "Ingen svensk beskrivning tillgänglig för denna film."}
             </p>
           </div>
 
           <div className="detail-actions-group">
+            {trailerKey && (
+              <button
+                type="button"
+                className="btn-detail-trailer"
+                onClick={() => setShowModal(true)}
+              >
+                ▶ Se trailer
+              </button>
+            )}
+
             <button
               type="button"
               className={inWatchlist ? "btn-detail-saved" : "btn-detail-save"}
-              onClick={() =>
-                inWatchlist
-                  ? removeFromWatchlist(movie.id)
-                  : addToWatchlist(moviePayload)
-              }
+              onClick={handleToggleWatchlist}
             >
-              {inWatchlist ? "✕ Ta bort från min lista" : "+ Lägg till i min lista"}
+              {inWatchlist ? "✕ Ta bort från lista" : "+ Lägg till i Min lista"}
             </button>
 
             <button
               type="button"
               className={watched ? "btn-detail-watched-active" : "btn-detail-watched"}
-              onClick={() =>
-                watched
-                  ? unmarkAsWatched(movie.id)
-                  : markAsWatched(moviePayload)
-              }
+              onClick={handleToggleWatched}
             >
-              {watched ? "✓ Obejrzano (Klicka för att ångra)" : "👁 Markera som sedd"}
+              {watched ? "✓ Sedd" : "Markera som sedd"}
             </button>
           </div>
         </div>
-      </section>
+      </article>
+
+      {showModal && trailerKey && (
+        <div className="trailer-modal-backdrop" onClick={() => setShowModal(false)}>
+          <div
+            className="trailer-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="trailer-modal-close"
+              onClick={() => setShowModal(false)}
+            >
+              ✕ Stäng
+            </button>
+            <div className="trailer-video-wrapper">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                title={`${movie.title} Trailer`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
